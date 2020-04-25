@@ -1,0 +1,16 @@
+{
+  "name": "node-f3-card-dispenser",
+  "version": "1.0.0",
+  "description": "This is a project NodeJS/C++ addon for control the reader and card dispenser: RFID/IC Card Dispenser: Motorized, F3 provide by Lintechtt.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "node-gyp rebuild"
+  },
+  "keywords": [
+    "node-card-dispenser"
+  ],
+  "author": "Leandro Marques",
+  "license": "ISC",
+  "gypfile": true
+}
