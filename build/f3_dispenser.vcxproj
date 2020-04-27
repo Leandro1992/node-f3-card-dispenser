@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5CD4BEF7-6EEA-B7DB-BAD9-6D62AB7351CE}</ProjectGuid>
+    <ProjectGuid>{A1A5617E-EFD5-A84E-57A3-1458359ECA36}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>f3_dispenser</RootNamespace>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
