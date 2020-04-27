@@ -66,8 +66,33 @@ class F3Dipenser {
         })
     }
 
+    // MM_RETURN_TO_FRONT - s3,s4,s7
+    // MM_RETURN_TO_IC_POS- s1,s2,s3,s4,s7
+    // MM_RETURN_TO_RF_POS - s1,s2,s3,s7
+    // MM_CAPTURE_TO_BOX - 	s7
+    // MM_EJECT_TO_FRONT - s4, s7
+    // S7 - WHEN S7 IS NOT FOUND THERE IS NO CARD IN THE BOX
+    checkSensorStatus(){
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.sensorStatus();
+                resolve(status);
+            } else {
+                resolve(status);
+            }
+        })
+    }
+
     checkStock() {
 
+    }
+
+    allowInsertCard(){
+
+    }
+
+    notAllowInsertCard(){
+        
     }
 
     readingPosition() {
@@ -82,7 +107,7 @@ class F3Dipenser {
 
     }
 
-    discard() {
+    discart() {
 
     }
 
