@@ -72,7 +72,7 @@ class F3Dipenser {
     // MM_CAPTURE_TO_BOX - 	s7
     // MM_EJECT_TO_FRONT - s4, s7
     // S7 - WHEN S7 IS NOT FOUND THERE IS NO CARD IN THE BOX
-    checkSensorStatus(){
+    checkSensorStatus() {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 const status = dispenser.sensorStatus();
@@ -83,16 +83,31 @@ class F3Dipenser {
         })
     }
 
-    checkStock() {
+    checkDispenserStatus() {
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.checkDispenserStatus();
+                console.log(status, typeof status)
+                if(status && typeof status == 'object'){
+                    let filterResult = Object.keys(status).map((key) => {
+                        return status[key] = Util[key][status[key]]
+                    });
+                    resolve(filterResult);
+                }else{
+                    resolve(status);
+                }
+            } else {
+                resolve(status);
+            }
+        })
+    }
+
+    allowInsertCard() {
 
     }
 
-    allowInsertCard(){
+    notAllowInsertCard() {
 
-    }
-
-    notAllowInsertCard(){
-        
     }
 
     readingPosition() {
@@ -116,7 +131,7 @@ class F3Dipenser {
     }
 
     allowInsertCard() {
-        
+
     }
 
     inicializeCardReader() {

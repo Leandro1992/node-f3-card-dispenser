@@ -23,16 +23,27 @@ const checkSensorStatus = () => {
 const move = (position) => {
     myDispenser.move(position).then((move) => {
         console.log(move);
-        checkSensorStatus()
+        // checkSensorStatus()
+        checkDispenserStatus();
     }).catch((err) => {
         console.log(err)
     })
 }
 
+const checkDispenserStatus = () => {
+    myDispenser.checkDispenserStatus().then((status) => {
+        console.log(status, "status!");
+    }).catch((err) => {
+        console.log(err)
+    })
+    
+}
+
 const init = () => {
     myDispenser.connect().then((bew) => {
-        console.log(bew)
-        move(5)
+        console.log(bew);
+        checkDispenserStatus();
+        move(4)
     }).catch((err1) => {
         console.log(err1)
     })
