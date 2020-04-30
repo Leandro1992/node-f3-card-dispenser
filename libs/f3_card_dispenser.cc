@@ -39,6 +39,22 @@ void Disconnec(const FunctionCallbackInfo<Value> &args)
   args.GetReturnValue().Set(num);
 }
 
+void AllowInsertion(const FunctionCallbackInfo<Value> &args)
+{
+  Isolate *isolate = args.GetIsolate();
+  int result = F3_PermitInsertion(handle);
+  Local<Number> num = Number::New(isolate, result);
+  args.GetReturnValue().Set(num);
+}
+
+void DenyInsertion(const FunctionCallbackInfo<Value> &args)
+{
+  Isolate *isolate = args.GetIsolate();
+  int result = F3_DenieInsertion(handle);
+  Local<Number> num = Number::New(isolate, result);
+  args.GetReturnValue().Set(num);
+}
+
 void Move(const FunctionCallbackInfo<Value> &args)
 {
   Isolate *isolate = args.GetIsolate();
@@ -187,6 +203,8 @@ void Initialize(Local<Object> exports)
   NODE_SET_METHOD(exports, "move", Move);
   NODE_SET_METHOD(exports, "sensorStatus", SensorStatus);
   NODE_SET_METHOD(exports, "checkDispenserStatus", GetDispenserStatus);
+  NODE_SET_METHOD(exports, "allowInsertion", AllowInsertion);
+  NODE_SET_METHOD(exports, "denyInsertion", DenyInsertion);
 }
 
 NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize);

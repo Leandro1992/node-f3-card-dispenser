@@ -7,25 +7,16 @@ class F3Dipenser {
     constructor(options) {
         let default_options = {
             port: 3,
-            baudrate: 9600
+            baudrate: 9600,
+            cardReaderRFC: false,
+            cardReaderICC: false
         }
-        this.MOVE = {
-            MM_RETURN_TO_FRONT: 1,
-            MM_RETURN_TO_IC_POS: 2,
-            MM_RETURN_TO_RF_POS: 3,
-            MM_CAPTURE_TO_BOX: 4,
-            MM_EJECT_TO_FRONT: 5,
-        }
-
         this.connected = 1;
+        this.allowInsert = false;
         this.options = Object.assign(default_options, options)
     }
 
-    log(msg, error = false) {
-        if (this.options.debug) {
-            error ? console.error(msg) : console.log(msg);
-        }
-    }
+    //DLL CALL METHODS
 
     connect() {
         return new Promise((resolve, reject) => {
@@ -61,24 +52,19 @@ class F3Dipenser {
                 const moved = dispenser.move(movement);
                 resolve(Util.msgMapper[moved]);
             } else {
-                resolve(Util.msgMapper[12304]);
+                reject({ error: Util.msgMapper[12304] });
             }
         })
     }
 
-    // MM_RETURN_TO_FRONT - s3,s4,s7
-    // MM_RETURN_TO_IC_POS- s1,s2,s3,s4,s7
-    // MM_RETURN_TO_RF_POS - s1,s2,s3,s7
-    // MM_CAPTURE_TO_BOX - 	s7
-    // MM_EJECT_TO_FRONT - s4, s7
-    // S7 - WHEN S7 IS NOT FOUND THERE IS NO CARD IN THE BOX
+    //Get an overview about the 12 sensor on the hardware, check docs to see what is each one
     checkSensorStatus() {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 const status = dispenser.sensorStatus();
                 resolve(status);
             } else {
-                resolve(status);
+                reject({ error: Util.msgMapper[12304] });
             }
         })
     }
@@ -87,63 +73,107 @@ class F3Dipenser {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 const status = dispenser.checkDispenserStatus();
-                console.log(status, typeof status)
-                if(status && typeof status == 'object'){
-                    let filterResult = Object.keys(status).map((key) => {
-                        return status[key] = Util[key][status[key]]
-                    });
+                if (status && typeof status == 'object') {
+                    let filterResult = Object.keys(status).map((key) => status[key] = Util[key][status[key]]);
                     resolve(filterResult);
-                }else{
+                } else {
                     resolve(status);
                 }
             } else {
-                resolve(status);
+                reject({ error: Util.msgMapper[12304] });
             }
         })
     }
 
     allowInsertCard() {
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.allowInsertion();
+                if (status == 0) this.allowInsert = true;
+                resolve(Util.msgMapper[status]);
+            } else {
+                reject({ error: Util.msgMapper[12304] });
+            }
+        })
+    }
+
+    denyInsertCard() {
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.denyInsertion();
+                if (status == 0) this.allowInsert = false;
+                resolve(Util.msgMapper[status]);
+            } else {
+                reject({ error: Util.msgMapper[12304] });
+            }
+        })
+    }
+
+    //CARD_READER METHODS
+
+    inicializeCard(action){
 
     }
 
-    notAllowInsertCard() {
+    detectRFCType(){
 
     }
 
-    readingPosition() {
-
+    detectICCType(){
+        
     }
 
-    finalPosition() {
+    //HELPER METHODS
 
+    //MM_EJECT_TO_FRONT
+    moveStraightOut() {
+        return this.move(5)
+    }
+    //MM_CAPTURE_TO_BOX
+    moveToCaptureBox() {
+        return this.move(4)
+    }
+    //MM_RETURN_TO_RF_POS
+    moveToRFPosition() {
+        return this.move(3)
+    }
+    // MM_RETURN_TO_IC_POS
+    moveToICPosition() {
+        return this.move(2)
+    }
+    //MM_RETURN_TO_FRONT
+    moveOut() {
+        return this.move(1)
     }
 
-    stockStatus() {
-
+    cardBoxStatus() {
+        const scope = this;
+        return new Promise((resolve, reject) => {
+            scope.checkDispenserStatus().then(result => {
+                if (Array.isArray(result)) resolve(result[1]);
+                reject({ error: 'An error ocurred!' });
+            }).catch(reject)
+        })
     }
 
-    discart() {
-
+    captureBoxIsFull() {
+        const scope = this;
+        return new Promise((resolve, reject) => {
+            scope.checkDispenserStatus().then(result => {
+                if (Array.isArray(result)) resolve(result[2]);
+                reject({ error: 'An error ocurred!' });
+            }).catch(reject)
+        })
     }
 
-    checkTypeCard() {
-
-    }
-
-    allowInsertCard() {
-
-    }
-
-    inicializeCardReader() {
-
-    }
-
-    readCard() {
-
-    }
-
-    handleReturn() {
-
+    hasCard() {
+        const scope = this;
+        return new Promise((resolve, reject) => {
+            scope.checkDispenserStatus().then(result => {
+                if (Array.isArray(result)) resolve(result[0]);
+                reject({ error: 'An error ocurred!' });
+            }).catch(reject)
+        })
     }
 }
 
