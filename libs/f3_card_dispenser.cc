@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 namespace f3_dispenser
 {
@@ -150,7 +151,7 @@ void GetDispenserStatus(const FunctionCallbackInfo<Value> &args)
     switch (crs.bLaneStatus)
     {
     case LS_NO_CARD_IN:
-      laneStatus= Number::New(isolate, LS_NO_CARD_IN);
+      laneStatus = Number::New(isolate, LS_NO_CARD_IN);
       obj->Set(context, String::NewFromUtf8(isolate, "laneStatus", NewStringType::kNormal).ToLocalChecked(), laneStatus).FromJust();
       ;
       break;
@@ -180,11 +181,13 @@ void GetDispenserStatus(const FunctionCallbackInfo<Value> &args)
       break;
     }
 
-    if (crs.fCaptureBoxFull){
+    if (crs.fCaptureBoxFull)
+    {
       fullCaptureBox = Number::New(isolate, 1);
       obj->Set(context, String::NewFromUtf8(isolate, "fullCaptureBox", NewStringType::kNormal).ToLocalChecked(), fullCaptureBox).FromJust();
     }
-    else{
+    else
+    {
       fullCaptureBox = Number::New(isolate, 0);
       obj->Set(context, String::NewFromUtf8(isolate, "fullCaptureBox", NewStringType::kNormal).ToLocalChecked(), fullCaptureBox).FromJust();
     }
@@ -196,6 +199,63 @@ void GetDispenserStatus(const FunctionCallbackInfo<Value> &args)
   }
 }
 
+std::string byteToHexString(BYTE *data, DWORD len)
+{
+  std::stringstream ss;
+  ss << std::hex;
+  int length = (int)len;
+  for (int i(0); i < length; ++i)
+  {
+    ss << std::setw(2) << std::setfill('0') << (int)data[i];
+  }
+  std::string str = ss.str();
+  return str;
+}
+
+void EnableRFIDTypeA(const FunctionCallbackInfo<Value> &args)
+{
+  Isolate *isolate = args.GetIsolate();
+  Local<Context> context = isolate->GetCurrentContext();
+  Local<Object> obj = Object::New(isolate);
+  BYTE ATRBuff[32];
+  DWORD ATRLength = sizeof(ATRBuff);
+  int result = F3_RfcActivate(handle, ATRBuff, &ATRLength, RFC_PROTOCOL_TYPE_A);
+  std::string hexString = byteToHexString(ATRBuff, ATRLength);
+  Local<Number> num = Number::New(isolate, result);
+  obj->Set(context, String::NewFromUtf8(isolate, "result", NewStringType::kNormal).ToLocalChecked(), num).FromJust();
+  obj->Set(context, String::NewFromUtf8(isolate, "hexString", NewStringType::kNormal).ToLocalChecked(), String::NewFromUtf8(isolate, hexString.c_str(), NewStringType::kNormal).ToLocalChecked()).FromJust();
+
+  args.GetReturnValue().Set(obj);
+}
+
+void ReadRfid(const FunctionCallbackInfo<Value> &args)
+{
+  Isolate *isolate = args.GetIsolate();
+  Local<Context> context = isolate->GetCurrentContext();
+  Local<Object> obj = Object::New(isolate);
+  
+  //VERIFY PASSWORD TO READ
+  BYTE m_iSectorNum = (BYTE)0;
+  BOOL bWithKeyA = (BOOL) true;
+  BYTE KeyBytes[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  LONG lverify = F3_MfVerifyPassword(handle, m_iSectorNum, bWithKeyA, KeyBytes);
+
+  //READ UUID FROM CARD
+  BYTE iBlockNum = (BYTE)0;
+  UINT iValue;
+  LONG lResult = F3_MfReadValue(handle, m_iSectorNum, iBlockNum, &iValue);
+
+  Local<Number> result = Number::New(isolate, lResult);
+  Local<Number> verify = Number::New(isolate, lverify);
+  Local<Number> readed = Number::New(isolate, iValue);
+
+  obj->Set(context, String::NewFromUtf8(isolate, "verify", NewStringType::kNormal).ToLocalChecked(), verify).FromJust();
+  obj->Set(context, String::NewFromUtf8(isolate, "result", NewStringType::kNormal).ToLocalChecked(), result).FromJust();
+  obj->Set(context, String::NewFromUtf8(isolate, "readed", NewStringType::kNormal).ToLocalChecked(), readed).FromJust();
+  
+  args.GetReturnValue().Set(obj);
+}
+
 void Initialize(Local<Object> exports)
 {
   NODE_SET_METHOD(exports, "connect", Connect);
@@ -205,6 +265,8 @@ void Initialize(Local<Object> exports)
   NODE_SET_METHOD(exports, "checkDispenserStatus", GetDispenserStatus);
   NODE_SET_METHOD(exports, "allowInsertion", AllowInsertion);
   NODE_SET_METHOD(exports, "denyInsertion", DenyInsertion);
+  NODE_SET_METHOD(exports, "enableRfidTypeA", EnableRFIDTypeA);
+  NODE_SET_METHOD(exports, "readRfid", ReadRfid);
 }
 
 NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize);

@@ -1,7 +1,5 @@
 const Dispenser = require('./index');
 
-const myDispenser = new Dispenser();
-
 const disconnect = () => {
     console.log("chamei para desconectar")
     myDispenser.disconnect().then((bew) => {
@@ -25,7 +23,7 @@ const move = (position) => {
         console.log(move);
         // checkSensorStatus()
         // checkDispenserStatus();
-        denyInsertCard();
+        // denyInsertCard();
     }).catch((err) => {
         console.log(err)
     })
@@ -37,15 +35,15 @@ const checkDispenserStatus = () => {
     }).catch((err) => {
         console.log(err)
     })
-    
+
 }
 
 const allowInsertCard = () => {
     myDispenser.allowInsertCard().then((status) => {
         console.log(status, "status!");
         setTimeout(() => {
-            console.log("Finish")
-        },5000)
+            move(1)
+        }, 5000)
     }).catch((err) => {
         console.log(err)
     })
@@ -85,10 +83,40 @@ const checkIndividualStatus = () => {
     })
 }
 
+const inicializeCard = () => {
+    myDispenser.inicializeCard().then((bew) => {
+        console.log(bew);
+    }).catch((err1) => {
+        console.log(err1)
+    })
+}
+
+const readRfid = () => {
+    myDispenser.readRfid().then((bew) => {
+        console.log(bew);
+    }).catch((err1) => {
+        console.log(err1)
+    })
+}
+
+const autoReadEnable = () => {
+    let enabled = myDispenser.enableCheckRfid();
+    console.log(enabled);
+}
+
+const listenCard = card => {
+    let disabled = myDispenser.disableCheckRfid();
+    readRfid();
+    move(1);
+    let enabled = myDispenser.enableCheckRfid();
+}
+
+const myDispenser = new Dispenser({handleHasCard:listenCard});
+
 const init = () => {
     myDispenser.connect().then((bew) => {
         console.log("Connected!");
-        allowInsertCard(); 
+        autoReadEnable();
     }).catch((err1) => {
         console.log(err1)
     })

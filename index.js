@@ -5,26 +5,65 @@ const Util = require('./util');
 class F3Dipenser {
 
     constructor(options) {
-        let default_options = {
+        const default_options = {
             port: 3,
             baudrate: 9600,
-            cardReaderRFC: false,
-            cardReaderICC: false
+            allowInsert: true,
+            handleHasCard: () => console.log("has card in the middle from inside"),
+            handleHasCardOnGate: () => console.log("has card on the gate from inside"),
+            handleNoCardIn: () => console.log("no card in from inside"),
+            intervalCheck: 1000 //Auto check card timeout in milliseconds
         }
         this.connected = 1;
-        this.allowInsert = false;
         this.options = Object.assign(default_options, options)
+        this.intervalCheck = null;
+        this.autoCheck = false;
+    }
+
+    enableCheckRfid() {
+        this.autoCheck = true;
+        this.configureInterval();
+        return true;
+    }
+
+    disableCheckRfid() {
+        this.autoCheck = false;
+        clearInterval(this.intervalCheck);
+        return true;
+    }
+
+    configureInterval() {
+        if(this.intervalCheck) clearInterval(this.intervalCheck);
+        this.intervalCheck = setInterval(() => {
+            if (this.connected == 0) {
+                this.hasCard().then(data => {
+                    if(data == 'CARD_IN_THE_MIDDLE'){
+                        this.options.handleHasCard();
+                    }
+                    if(data == 'CARD_AT_GATE_POS'){
+                        this.options.handleHasCardOnGate();
+                    }
+                    if(data == 'NO_CARD_IN'){
+                        this.options.handleNoCardIn();
+                    }
+                }).catch(err => console.log(err))
+            } else {
+                console.log("ainda não conectado")
+            }
+        }, this.options.intervalCheck);
     }
 
     //DLL CALL METHODS
 
     connect() {
+        const scope = this;
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 resolve(Util.msgMapper[this.connected]);
             } else {
                 this.connected = dispenser.connect(this.options.port, this.options.baudrate);
                 if (this.connected == 0) {
+                    if (this.options.allowInsert) scope.allowInsertCard();
                     resolve(Util.msgMapper[this.connected]);
                 } else {
                     console.log(this.connected)
@@ -89,7 +128,7 @@ class F3Dipenser {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 const status = dispenser.allowInsertion();
-                if (status == 0) this.allowInsert = true;
+                if (status == 0) this.options.allowInsert = true;
                 resolve(Util.msgMapper[status]);
             } else {
                 reject({ error: Util.msgMapper[12304] });
@@ -101,7 +140,7 @@ class F3Dipenser {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
                 const status = dispenser.denyInsertion();
-                if (status == 0) this.allowInsert = false;
+                if (status == 0) this.options.allowInsert = false;
                 resolve(Util.msgMapper[status]);
             } else {
                 reject({ error: Util.msgMapper[12304] });
@@ -111,17 +150,42 @@ class F3Dipenser {
 
     //CARD_READER METHODS
 
-    inicializeCard(action){
+    inicializeCard() {
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.enableRfidTypeA();
+                resolve(status);
+            } else {
+                reject({ error: Util.msgMapper[12304] });
+            }
+        })
 
     }
 
-    detectRFCType(){
+    readRfid() {
+        return new Promise((resolve, reject) => {
+            if (this.connected == 0) {
+                const status = dispenser.readRfid();
+                if (status.result == 0) {
+                    resolve(status.readed)
+                } else {
+                    reject({ error: Util.msgMapper[status.result], error_verify: Util.msgMapper[status.verify] });
+                }
+            } else {
+                reject({ error: Util.msgMapper[12304] });
+            }
+        })
+    }
+
+    detectRFCType() {
 
     }
 
-    detectICCType(){
-        
+    detectICCType() {
+
     }
+
+    // END CARD_READER METHODS
 
     //HELPER METHODS
 
