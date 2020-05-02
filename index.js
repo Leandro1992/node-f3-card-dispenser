@@ -1,5 +1,4 @@
 const dispenser = require('./build/Release/f3_dispenser');
-
 const Util = require('./util');
 
 class F3Dipenser {
@@ -9,10 +8,10 @@ class F3Dipenser {
             port: 3,
             baudrate: 9600,
             allowInsert: true,
-            handleHasCard: () => console.log("has card in the middle from inside"),
-            handleHasCardOnGate: () => console.log("has card on the gate from inside"),
-            handleNoCardIn: () => console.log("no card in from inside"),
-            intervalCheck: 1000 //Auto check card timeout in milliseconds
+            handleHasCard: () => console.log("hasCard"),
+            handleHasCardOnGate: () => console.log("cardOnGate"),
+            handleNoCardIn: () => console.log("noCard"),
+            intervalTimeout: 1000 //Auto check card timeout in milliseconds
         }
         this.connected = 1;
         this.options = Object.assign(default_options, options)
@@ -33,24 +32,24 @@ class F3Dipenser {
     }
 
     configureInterval() {
-        if(this.intervalCheck) clearInterval(this.intervalCheck);
+        if (this.intervalCheck) clearInterval(this.intervalCheck);
         this.intervalCheck = setInterval(() => {
             if (this.connected == 0) {
                 this.hasCard().then(data => {
-                    if(data == 'CARD_IN_THE_MIDDLE'){
+                    if (data == 'CARD_IN_THE_MIDDLE') {
                         this.options.handleHasCard();
                     }
-                    if(data == 'CARD_AT_GATE_POS'){
+                    if (data == 'CARD_AT_GATE_POS') {
                         this.options.handleHasCardOnGate();
                     }
-                    if(data == 'NO_CARD_IN'){
+                    if (data == 'NO_CARD_IN') {
                         this.options.handleNoCardIn();
                     }
                 }).catch(err => console.log(err))
             } else {
                 console.log("ainda não conectado")
             }
-        }, this.options.intervalCheck);
+        }, this.options.intervalTimeout);
     }
 
     //DLL CALL METHODS
@@ -150,18 +149,6 @@ class F3Dipenser {
 
     //CARD_READER METHODS
 
-    inicializeCard() {
-        return new Promise((resolve, reject) => {
-            if (this.connected == 0) {
-                const status = dispenser.enableRfidTypeA();
-                resolve(status);
-            } else {
-                reject({ error: Util.msgMapper[12304] });
-            }
-        })
-
-    }
-
     readRfid() {
         return new Promise((resolve, reject) => {
             if (this.connected == 0) {
@@ -175,14 +162,6 @@ class F3Dipenser {
                 reject({ error: Util.msgMapper[12304] });
             }
         })
-    }
-
-    detectRFCType() {
-
-    }
-
-    detectICCType() {
-
     }
 
     // END CARD_READER METHODS

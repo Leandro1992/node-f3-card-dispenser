@@ -1,5 +1,25 @@
 const Dispenser = require('./index');
 
+
+const hasCard = () => {
+    myDispenser.disableCheckRfid();
+    readRfid();
+    move(1);
+    myDispenser.enableCheckRfid();
+}
+
+const handleHasCardOnGate = () => {
+    console.log("Has a card on the gate, please get your card!")
+}
+
+const handleNoCardIn = () => {
+    console.log("There is no card in!")
+}
+
+// INSTANCE OF DISPENSER
+
+const myDispenser = new Dispenser({ port: 3, baudrate: 9600, allowInsert: true, intervalTimeout: 1000, handleHasCard: hasCard, handleHasCardOnGate, handleNoCardIn });
+
 const disconnect = () => {
     console.log("chamei para desconectar")
     myDispenser.disconnect().then((bew) => {
@@ -103,15 +123,6 @@ const autoReadEnable = () => {
     let enabled = myDispenser.enableCheckRfid();
     console.log(enabled);
 }
-
-const listenCard = card => {
-    let disabled = myDispenser.disableCheckRfid();
-    readRfid();
-    move(1);
-    let enabled = myDispenser.enableCheckRfid();
-}
-
-const myDispenser = new Dispenser({handleHasCard:listenCard});
 
 const init = () => {
     myDispenser.connect().then((bew) => {
