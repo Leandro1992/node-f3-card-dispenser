@@ -2,7 +2,7 @@
 
 
 This module is an addons NodeJS that make a interface with lib of [F3 Card Dispenser].
- On npm i just publish an .node build but if you want have access to lib files and how i build this see [github repository] of this project.
+If you want have access to lib files and how i build this see [github repository] of this project.
 
 # Features
 
